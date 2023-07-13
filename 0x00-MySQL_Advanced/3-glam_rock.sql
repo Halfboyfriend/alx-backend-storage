@@ -1,34 +1,42 @@
 -- script that lists all bands with Glam rock as their main style, ranked by their longevity
 -- Import this table dump: metal_bands.sql.zip
-DELIMITER $$
-
--- Create a stored procedure to calculate band longevity
-CREATE PROCEDURE calculate_band_longevity()
+DELIMITER $$;
+-- Create a stored procedure to calculate lifespan and retrieve the bands
+CREATE PROCEDURE GetGlamRockBands()
 BEGIN
-    -- Create a temporary table to store the results
-    CREATE TEMPORARY TABLE IF NOT EXISTS band_longevity (
-        band_name VARCHAR(100),
+    -- Create a temporary table to store the band names and lifespan
+    CREATE TEMPORARY TABLE temp_bands (
+        band_name VARCHAR(255),
         lifespan INT
     );
 
-    -- Insert data into the temporary table
-    INSERT INTO band_longevity (band_name, lifespan)
-    SELECT band_name, (YEAR('2022-01-01') - split + 1) AS lifespan
-    FROM (
-        SELECT band_name, SUBSTRING_INDEX(lifespan, ' - ', 1) AS formed,
-               SUBSTRING_INDEX(lifespan, ' - ', -1) AS split
-        FROM metal_bands
-        WHERE style LIKE '%Glam rock%'
-    ) AS subquery;
+    -- Insert band names and lifespan into the temporary table
+    INSERT INTO temp_bands (band_name, lifespan)
+    SELECT
+        band_name,
+        IFNULL(
+            YEAR(split) - YEAR(formed),
+            YEAR('2022') - YEAR(formed)
+        ) AS lifespan
+    FROM
+        metal_bands
+    WHERE
+        style LIKE '%Glam rock%';
 
-    -- Select bands ranked by longevity
-    SELECT band_name, lifespan
-    FROM band_longevity
-    ORDER BY lifespan DESC;
-END$$
+    -- Retrieve the bands ranked by their longevity
+    SELECT
+        band_name,
+        lifespan
+    FROM
+        temp_bands
+    ORDER BY
+        lifespan DESC;
+
+    -- Drop the temporary table
+    DROP TEMPORARY TABLE temp_bands;
+END;$$
+-- Reset the delimiter back to ;
+DELIMITER ;
 
 -- Call the stored procedure
-CALL calculate_band_longevity();
-
--- Reset the delimiter back to the semicolon
-DELIMITER ;
+CALL GetGlamRockBands();
