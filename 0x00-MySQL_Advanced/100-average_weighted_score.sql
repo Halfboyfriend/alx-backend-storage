@@ -1,13 +1,11 @@
 --  script that creates a stored procedure ComputeAverageWeightedScoreForUser that computes and store the average weighted score for a student.
 -- Procedure ComputeAverageScoreForUser is taking 1 input:
 DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUser;
-DELIMITER $$;
-CREATE PROCEDURE ComputeAverageWeightedScoreForUser(
-    IN user_id INTEGER
-)
+DELIMITER $$
+CREATE PROCEDURE ComputeAverageWeightedScoreForUser (user_id INT)
 BEGIN
     DECLARE total_weighted_score INT DEFAULT 0;
-    DECLARE total_weight INT DEFAULT 0
+    DECLARE total_weight INT DEFAULT 0;
 
     SELECT SUM(corrections.score * projects.weight)
         INTO total_weighted_score
