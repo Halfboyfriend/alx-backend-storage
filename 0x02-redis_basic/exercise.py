@@ -55,6 +55,23 @@ class Cache:
 
         return wrapped
 
+    def replay(self, method_name: str):
+        input_key = self._get_key(method_name, "inputs")
+        output_key = self._get_key(method_name, "outputs")
+
+        inputs = self._redis.lrange(input_key, 0, -1)
+        outputs = self._redis.lrange(output_key, 0, -1)
+
+        print(f"Method: {method_name}\n")
+        print("Inputs:")
+        for i, args_str in enumerate(inputs, 1):
+            args = self._deserialize_args(args_str)
+            print(f"{i}. {args}")
+        print("\nOutputs:")
+        for i, output_str in enumerate(outputs, 1):
+            output = self._deserialize_output(output_str)
+            print(f"{i}. {output}\n")
+
     @count_calls
     @call_history
     def store(self, data: Union[str, float, int, bytes]) -> str:
