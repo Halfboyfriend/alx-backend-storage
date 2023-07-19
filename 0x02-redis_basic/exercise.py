@@ -24,6 +24,6 @@ class Cache:
         Create a store method that takes a data argument and 
         returns a string
         """
-        k = str(uuid.uuid4())
-        self._redis.set(k, data)
-        return k
+        randKey = str(uuid.uuid4())
+        self._redis.set(randKey, data)
+        return randKey
