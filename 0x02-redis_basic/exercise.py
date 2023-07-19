@@ -18,7 +18,7 @@ class Cache:
     """
     def __init__(self):
         """
-        Initialize and fluchdb"""
+        Initialize and flushdb"""
         self._redis = redis.Redis()
         self._redis.flushdb()
 
@@ -31,7 +31,32 @@ class Cache:
 
         return wrapped
 
+    @staticmethod
+    def _get_key(method_name: str, suffix: str) -> str:
+        return f"{method_name}:{suffix}"
+
+    @staticmethod
+    def _serialize_args(args: tuple) -> str:
+        return str(args)
+
+    @functools.wraps
+    def call_history(method: Callable) -> Callable:
+        def wrapped(self, *args, **kwargs):
+            input_key = self._get_key(method.__qualname__, "inputs")
+            output_key = self._get_key(method.__qualname__, "outputs")
+
+            serialized_args = self._serialize_args(args)
+            self._redis.rpush(input_key, serialized_args)
+
+            result = method(self, *args, **kwargs)
+            self._redis.rpush(output_key, str(result))
+
+            return result
+
+        return wrapped
+
     @count_calls
+    @call_history
     def store(self, data: Union[str, float, int, bytes]) -> str:
         """
 
