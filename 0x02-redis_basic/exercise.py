@@ -6,7 +6,7 @@ Redis client as a private variable
 named _redis (using redis.Redis()) and flush the instance using
 """
 import redis
-from typing import Union
+from typing import Union, Callable
 import uuid
 
 
@@ -29,3 +29,18 @@ class Cache:
         randKey = str(uuid.uuid4())
         self._redis.set(randKey, data)
         return randKey
+
+    def get(self, key: str, fn: Callable = None) -> \
+            Union[str, bytes, int, float, None]:
+        dt = self._redis.get(key)
+        if dt is None:
+            return None
+        if fn is not None:
+            return fn(dt)
+        return dt
+
+    def get_str(self, key: str) -> Union[str, None]:
+        return self.get(key, fn=lambda x: x.decode('utf-8'))
+
+    def get_int(self, key: str) -> Union[int, None]:
+        return self.get(key, fn=int)
