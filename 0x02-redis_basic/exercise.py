@@ -5,6 +5,8 @@ In the __init__ method, store an instance of the
 Redis client as a private variable
 named _redis (using redis.Redis()) and flush the instance using
 """
+import functools
+
 import redis
 from typing import Union, Callable
 import uuid
@@ -20,6 +22,16 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @functools.wraps
+    def count_calls(fn: Callable) -> Callable:
+        def wrapped(self, *args, **kwargs):
+            key = fn.__qualname__
+            self._redis.incr(key)
+            return fn(self, *args, **kwargs)
+
+        return wrapped
+
+    @count_calls
     def store(self, data: Union[str, float, int, bytes]) -> str:
         """
 
